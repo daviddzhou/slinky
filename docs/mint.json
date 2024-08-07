@@ -20,6 +20,7 @@
     "og:site_name": "Connect Docs",
     "twitter:site": "@skipprotocol"
   },
+  "isWhiteLabeled": true,
   "topbarLinks": [
     {
       "name": "Skip:Go",
@@ -54,18 +55,35 @@
       ]
     },
     {
-      "group": "Learn",
+      "group": "Metrics",
       "pages": [
-        "learn/architecture",
-        "learn/security"
+        "metrics/overview",
+        "metrics/setup",
+        "metrics/oracle-reference",
+        "metrics/application-reference"
       ]
     },
     {
       "group": "Developers",
       "pages": [
-        "using-connect/high-level",
-        "using-connect/neutron-sdk",
-        "using-connect/providers"
+        "developers/integration",
+        "developers/high-level",
+        "developers/neutron-sdk",
+        "developers/providers",
+        {
+          "group": "Modules",
+          "icon": "layer-group",
+          "pages": [
+            "developers/modules/marketmap"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Learn",
+      "pages": [
+        "learn/architecture",
+        "learn/security"
       ]
     }
   ],
