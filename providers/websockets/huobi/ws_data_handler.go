@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base/websocket/handlers"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base/websocket/handlers"
 )
 
 var _ types.PriceWebSocketDataHandler = (*WebSocketHandler)(nil)
@@ -89,7 +89,11 @@ func (h *WebSocketHandler) HandleMessage(
 	if err := json.Unmarshal(uncompressed.Bytes(), &pingMessage); err == nil && pingMessage.Ping != 0 {
 		h.logger.Debug("received ping message")
 		updateMessage, err := NewPongMessage(pingMessage)
-		return resp, updateMessage, err
+
+		// The receipt of a ping message means that the connection is still alive and that all market's corresponding
+		// to the tickers subscribed to are still being tracked. Therefore, the response can include a message to let
+		// the provider know that market prices are still valid.
+		return h.cache.NoPriceChangeResponse(), updateMessage, err
 	}
 
 	// attempt to unmarshal to subscription response message and check if field values are not nil

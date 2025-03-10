@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base/websocket/handlers"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base/websocket/handlers"
 )
 
 var _ types.PriceWebSocketDataHandler = (*WebSocketHandler)(nil)
@@ -81,7 +81,7 @@ func (h *WebSocketHandler) HandleMessage(
 		return resp, nil, nil
 	case PongMessage:
 		h.logger.Debug("received pong message")
-		return resp, nil, nil
+		return h.cache.NoPriceChangeResponse(), nil, nil
 	case AckMessage:
 		h.logger.Debug("received ack message; markets were successfully subscribed to")
 		return resp, nil, nil

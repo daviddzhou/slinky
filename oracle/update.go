@@ -7,9 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // UpdateMarketMap updates the oracle's market map and updates the providers'
@@ -69,8 +69,12 @@ func (o *OracleImpl) UpdateProviderState(providerTickers []types.ProviderTicker,
 		}()
 	}
 
-	// Update the provider's state.
-	o.logger.Info("updated provider state", zap.String("provider_state", provider.Name()))
+	// Ignore sampling limits for provider update logs via injecting provider name in message
+	o.logger.Info(
+		fmt.Sprintf("updated %s provider state", provider.Name()),
+		zap.String("provider", provider.Name()),
+		zap.Int("num_tickers", len(provider.GetIDs())),
+	)
 	return state, nil
 }
 
@@ -99,8 +103,6 @@ func (o *OracleImpl) fetchAllPrices() {
 
 	// update the last sync time
 	o.metrics.AddTick()
-
-	o.logger.Info("oracle updated prices", zap.Time("last_sync", o.lastPriceSync), zap.Int("num_prices", len(o.aggregator.GetPrices())))
 }
 
 func (o *OracleImpl) fetchPrices(provider *types.PriceProvider) {

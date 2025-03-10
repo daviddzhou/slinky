@@ -15,11 +15,12 @@
     }
   },
   "metadata": {
-    "og:image": "https://github.com/skip-mev/slinky/blob/main/docs/img/connect-banner.png?raw=True",
+    "og:image": "https://github.com/skip-mev/connect/v2/blob/main/docs/img/connect-banner.png?raw=True",
     "og:description": "Connect is an enshrined, in-protocol oracle built for high performance applications.",
     "og:site_name": "Connect Docs",
     "twitter:site": "@skipprotocol"
   },
+  "isWhiteLabeled": true,
   "topbarLinks": [
     {
       "name": "Skip:Go",
@@ -54,24 +55,41 @@
       ]
     },
     {
-      "group": "Learn",
+      "group": "Metrics",
       "pages": [
-        "learn/architecture",
-        "learn/security"
+        "metrics/overview",
+        "metrics/setup",
+        "metrics/oracle-reference",
+        "metrics/application-reference"
       ]
     },
     {
       "group": "Developers",
       "pages": [
-        "using-connect/high-level",
-        "using-connect/neutron-sdk",
-        "using-connect/providers"
+        "developers/integration",
+        "developers/high-level",
+        "developers/connect-sdk",
+        "developers/providers",
+        {
+          "group": "Modules",
+          "icon": "layer-group",
+          "pages": [
+            "developers/modules/marketmap"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Learn",
+      "pages": [
+        "learn/architecture",
+        "learn/security"
       ]
     }
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/skipprotocol",
     "discord": "https://discord.com/invite/hFeHVAE26P",
-    "github": "https://github.com/skip-mev/slinky"
+    "github": "https://github.com/skip-mev/connect/v2"
   }
 }

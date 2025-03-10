@@ -2,10 +2,10 @@ package marketmaps
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"os"
 
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 var (
@@ -473,23 +473,6 @@ var (
           {
             "name": "coinmarketcap_api",
             "off_chain_ticker": "29676"
-          }
-        ]
-      },
-      "AGIX/USD": {
-        "ticker": {
-          "currency_pair": {
-            "Base": "AGIX",
-            "Quote": "USD"
-          },
-          "decimals": 10,
-          "min_provider_count": 1,
-          "enabled": true
-        },
-        "provider_configs": [
-          {
-            "name": "coinmarketcap_api",
-            "off_chain_ticker": "2424"
           }
         ]
       },
@@ -1173,10 +1156,10 @@ var (
           }
         ]
       },
-      "MATIC/USD": {
+      "POL/USD": {
         "ticker": {
           "currency_pair": {
-            "Base": "MATIC",
+            "Base": "POL",
             "Quote": "USD"
           },
           "decimals": 10,
@@ -1186,7 +1169,7 @@ var (
         "provider_configs": [
           {
             "name": "coinmarketcap_api",
-            "off_chain_ticker": "3890"
+            "off_chain_ticker": "28321"
           }
         ]
       },
@@ -1306,23 +1289,6 @@ var (
           {
             "name": "coinmarketcap_api",
             "off_chain_ticker": "28177"
-          }
-        ]
-      },
-      "RNDR/USD": {
-        "ticker": {
-          "currency_pair": {
-            "Base": "RNDR",
-            "Quote": "USD"
-          },
-          "decimals": 9,
-          "min_provider_count": 1,
-          "enabled": true
-        },
-        "provider_configs": [
-          {
-            "name": "coinmarketcap_api",
-            "off_chain_ticker": "5690"
           }
         ]
       },
@@ -3430,67 +3396,6 @@ var (
 			  {
 				"name": "okx_ws",
 				"off_chain_ticker": "AEVO-USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  }
-			]
-		  },
-		  "AGIX/USD": {
-			"ticker": {
-			  "currency_pair": {
-				"Base": "AGIX",
-				"Quote": "USD"
-			  },
-			  "decimals": 10,
-			  "min_provider_count": 3,
-			  "enabled": true
-			},
-			"provider_configs": [
-			  {
-				"name": "binance_ws",
-				"off_chain_ticker": "AGIXUSDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "bybit_ws",
-				"off_chain_ticker": "AGIXUSDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "gate_ws",
-				"off_chain_ticker": "AGIX_USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "kucoin_ws",
-				"off_chain_ticker": "AGIX-USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "okx_ws",
-				"off_chain_ticker": "AGIX-USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "mexc_ws",
-				"off_chain_ticker": "AGIXUSDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5838,10 +5743,10 @@ var (
 			  }
 			]
 		  },
-		  "MATIC/USD": {
+		  "POL/USD": {
 			"ticker": {
 			  "currency_pair": {
-				"Base": "MATIC",
+				"Base": "POL",
 				"Quote": "USD"
 			  },
 			  "decimals": 10,
@@ -5851,7 +5756,7 @@ var (
 			"provider_configs": [
 			  {
 				"name": "binance_ws",
-				"off_chain_ticker": "MATICUSDT",
+				"off_chain_ticker": "POLUSDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5859,7 +5764,7 @@ var (
 			  },
 			  {
 				"name": "bybit_ws",
-				"off_chain_ticker": "MATICUSDT",
+				"off_chain_ticker": "POLUSDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5867,11 +5772,11 @@ var (
 			  },
 			  {
 				"name": "coinbase_ws",
-				"off_chain_ticker": "MATIC-USD"
+				"off_chain_ticker": "POL-USD"
 			  },
 			  {
 				"name": "gate_ws",
-				"off_chain_ticker": "MATIC_USDT",
+				"off_chain_ticker": "POL_USDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5879,7 +5784,7 @@ var (
 			  },
 			  {
 				"name": "huobi_ws",
-				"off_chain_ticker": "maticusdt",
+				"off_chain_ticker": "polusdt",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5887,11 +5792,11 @@ var (
 			  },
 			  {
 				"name": "kraken_api",
-				"off_chain_ticker": "MATICUSD"
+				"off_chain_ticker": "POLUSD"
 			  },
 			  {
 				"name": "kucoin_ws",
-				"off_chain_ticker": "MATIC-USDT",
+				"off_chain_ticker": "POL-USDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5899,7 +5804,7 @@ var (
 			  },
 			  {
 				"name": "mexc_ws",
-				"off_chain_ticker": "MATICUSDT",
+				"off_chain_ticker": "POLUSDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5907,7 +5812,7 @@ var (
 			  },
 			  {
 				"name": "okx_ws",
-				"off_chain_ticker": "MATIC-USDT",
+				"off_chain_ticker": "POL-USDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -5915,7 +5820,7 @@ var (
 			  },
 			  {
 				"name": "crypto_dot_com_ws",
-				"off_chain_ticker": "MATIC_USD"
+				"off_chain_ticker": "POL_USD"
 			  }
 			]
 		  },
@@ -6347,67 +6252,6 @@ var (
 			  {
 				"name": "mexc_ws",
 				"off_chain_ticker": "PYTHUSDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  }
-			]
-		  },
-		  "RNDR/USD": {
-			"ticker": {
-			  "currency_pair": {
-				"Base": "RNDR",
-				"Quote": "USD"
-			  },
-			  "decimals": 9,
-			  "min_provider_count": 3,
-			  "enabled": true
-			},
-			"provider_configs": [
-			  {
-				"name": "binance_ws",
-				"off_chain_ticker": "RNDRUSDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "coinbase_ws",
-				"off_chain_ticker": "RNDR-USD"
-			  },
-			  {
-				"name": "kraken_api",
-				"off_chain_ticker": "RNDRUSD"
-			  },
-			  {
-				"name": "kucoin_ws",
-				"off_chain_ticker": "RNDR-USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "okx_ws",
-				"off_chain_ticker": "RNDR-USDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "mexc_ws",
-				"off_chain_ticker": "RNDRUSDT",
-				"normalize_by_pair": {
-				  "Base": "USDT",
-				  "Quote": "USD"
-				}
-			  },
-			  {
-				"name": "crypto_dot_com_ws",
-				"off_chain_ticker": "RNDR_USDT",
 				"normalize_by_pair": {
 				  "Base": "USDT",
 				  "Quote": "USD"
@@ -7982,23 +7826,6 @@ var (
 			  }
 			]
 		  },
-		  "AGIX/USD": {
-			"ticker": {
-			  "currency_pair": {
-				"Base": "AGIX",
-				"Quote": "USD"
-			  },
-			  "decimals": 10,
-			  "min_provider_count": 1,
-			  "enabled": true
-			},
-			"provider_configs": [
-			  {
-				"name": "coingecko_api",
-				"off_chain_ticker": "singularitynet/usd"
-			  }
-			]
-		  },
 		  "ALGO/USD": {
 			"ticker": {
 			  "currency_pair": {
@@ -9172,10 +8999,10 @@ var (
 			  }
 			]
 		  },
-		  "MATIC/USD": {
+		  "POL/USD": {
 			"ticker": {
 			  "currency_pair": {
-				"Base": "MATIC",
+				"Base": "POL",
 				"Quote": "USD"
 			  },
 			  "decimals": 10,
@@ -9185,7 +9012,7 @@ var (
 			"provider_configs": [
 			  {
 				"name": "coingecko_api",
-				"off_chain_ticker": "matic-network/usd"
+				"off_chain_ticker": "pol-network/usd"
 			  }
 			]
 		  },
@@ -9305,23 +9132,6 @@ var (
 			  {
 				"name": "coingecko_api",
 				"off_chain_ticker": "pyth-network/usd"
-			  }
-			]
-		  },
-		  "RNDR/USD": {
-			"ticker": {
-			  "currency_pair": {
-				"Base": "RNDR",
-				"Quote": "USD"
-			  },
-			  "decimals": 9,
-			  "min_provider_count": 1,
-			  "enabled": true
-			},
-			"provider_configs": [
-			  {
-				"name": "coingecko_api",
-				"off_chain_ticker": "render-token/usd"
 			  }
 			]
 		  },
@@ -9600,56 +9410,274 @@ var (
 		}
 	  } 
 	`
+
+	// OsmosisMarketMap is used to initialize the osmosis market map. This only includes
+	// the markets that are supported by osmosis.
+	OsmosisMarketMap mmtypes.MarketMap
+
+	// OsmosisMarketMapJSON is the JSON representation of OsmosisMarketMap.
+	OsmosisMarketMapJSON = `
+{
+    "markets": {
+        "STARS/USD": {
+            "ticker": {
+                "currency_pair": {
+                    "Base": "STARS",
+                    "Quote": "USD"
+                },
+                "decimals": 18,
+                "min_provider_count": 1,
+                "enabled": true,
+                "metadata_JSON": "{\"reference_price\":1,\"liquidity\":0,\"aggregate_ids\":[]}"
+            },
+            "provider_configs": [
+                {
+                    "name": "osmosis_api",
+                    "off_chain_ticker": "STARS/OSMO",
+                    "metadata_JSON": "{\"pool_id\":1096,\"base_token_denom\":\"ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4\",\"quote_token_denom\":\"uosmo\"}",
+                    "normalize_by_pair": {
+                        "Base": "OSMO",
+                        "Quote": "USD"
+                    }
+                }
+            ]
+        },
+        "USDT/USD": {
+            "ticker": {
+                "currency_pair": {
+                    "Base": "USDT",
+                    "Quote": "USD"
+                },
+                "decimals": 9,
+                "min_provider_count": 1,
+                "enabled": true
+            },
+            "provider_configs": [
+                {
+                    "name": "binance_ws",
+                    "off_chain_ticker": "USDCUSDT",
+                    "invert": true
+                },
+                {
+                    "name": "bybit_ws",
+                    "off_chain_ticker": "USDCUSDT",
+                    "invert": true
+                },
+                {
+                    "name": "coinbase_ws",
+                    "off_chain_ticker": "USDT-USD"
+                },
+                {
+                    "name": "kraken_api",
+                    "off_chain_ticker": "USDTZUSD"
+                },
+                {
+                    "name": "okx_ws",
+                    "off_chain_ticker": "USDC-USDT",
+                    "invert": true
+                },
+                {
+                    "name": "crypto_dot_com_ws",
+                    "off_chain_ticker": "USDT_USD"
+                }
+            ]
+        },
+        "OSMO/USD": {
+            "ticker": {
+                "currency_pair": {
+                    "Base": "OSMO",
+                    "Quote": "USD"
+                },
+                "decimals": 8,
+                "min_provider_count": 1,
+                "enabled": true,
+                "metadata_JSON": "{\"reference_price\":1,\"liquidity\":0,\"aggregate_ids\":[]}"
+            },
+            "provider_configs": [
+                {
+                    "name": "coinbase_ws",
+                    "off_chain_ticker": "OSMO-USD"
+                },
+                {
+                    "name": "huobi_ws",
+                    "off_chain_ticker": "osmousdt",
+                    "normalize_by_pair": {
+                        "Base": "USDT",
+                        "Quote": "USD"
+                    }
+                },
+                {
+                    "name": "binance_api",
+                    "off_chain_ticker": "OSMOUSDT",
+                    "normalize_by_pair": {
+                        "Base": "USDT",
+                        "Quote": "USD"
+                    }
+                }
+            ]
+        }
+    }
+}
+	`
+
+	// PolymarketMarketMap is used to initialize the Polymarket market map. This only includes one prediction market
+	// with one outcome token.
+	PolymarketMarketMap mmtypes.MarketMap
+
+	// PolymarketMarketMapJSON is the JSON representation of PolymarketMarketMap.
+	PolymarketMarketMapJSON = ` 
+{
+   "markets":{
+      "WILL_BERNIE_SANDERS_WIN_THE_2024_US_PRESIDENTIAL_ELECTION?YES/USD":{
+         "ticker":{
+            "currency_pair":{
+               "Base":"WILL_BERNIE_SANDERS_WIN_THE_2024_US_PRESIDENTIAL_ELECTION?YES",
+               "Quote":"USD"
+            },
+            "decimals":4,
+            "min_provider_count":1,
+            "enabled":true
+         },
+         "provider_configs":[
+            {
+               "name":"polymarket_api",
+               "off_chain_ticker":"0x08f5fe8d0d29c08a96f0bc3dfb52f50e0caf470d94d133d95d38fa6c847e0925/95128817762909535143571435260705470642391662537976312011260538371392879420759"
+            }
+         ]
+      },
+      "WILL_INSIDE_OUT_2_GROSS_MOST_IN_2024?YES/USD":{
+         "ticker":{
+            "currency_pair":{
+               "Base":"WILL_INSIDE_OUT_2_GROSS_MOST_IN_2024?YES",
+               "Quote":"USD"
+            },
+            "decimals":4,
+            "min_provider_count":1,
+            "enabled":true
+         },
+         "provider_configs":[
+            {
+               "name":"polymarket_api",
+               "off_chain_ticker":"0x1ab07117f9f698f28490f57754d6fe5309374230c95867a7eba572892a11d710/50107902083284751016545440401692219408556171231461347396738260657226842527986"
+            }
+         ]
+      }
+   }
+}`
+
+	// ForexMarketMap is used to initialize the forex market map. This only includes
+	// forex markets quoted in usdt.
+	ForexMarketMap mmtypes.MarketMap
+
+	// ForexMarketMapJSON is the JSON representation of ForexMarketMap.
+	ForexMarketMapJSON = `
+{
+    "markets": {
+      "TRY/USDT": {
+        "ticker": {
+          "currency_pair": {
+            "Base": "TRY",
+            "Quote": "USDT"
+          },
+          "decimals": 11,
+          "min_provider_count": 1,
+          "enabled": false,
+          "metadata_JSON": "{\"reference_price\":2935133548,\"liquidity\":1504939,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"2810\"}]}"
+        },
+        "provider_configs": [
+          {
+            "name": "binance_ws",
+            "off_chain_ticker": "USDTTRY",
+            "invert": true,
+            "metadata_JSON": ""
+          },
+          {
+            "name": "okx_ws",
+            "off_chain_ticker": "TRY-USDT",
+            "invert": false,
+            "metadata_JSON": ""
+          }
+        ]
+      },
+      "EUR/USDT": {
+        "ticker": {
+          "currency_pair": {
+            "Base": "EUR",
+            "Quote": "USDT"
+          },
+          "decimals": 9,
+          "min_provider_count": 1,
+          "enabled": false,
+          "metadata_JSON": "{\"reference_price\":1100800000,\"liquidity\":3843298,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"2790\"}]}"
+        },
+        "provider_configs": [
+          {
+            "name": "binance_ws",
+            "off_chain_ticker": "EURUSDT",
+            "invert": false,
+            "metadata_JSON": ""
+          },
+          {
+            "name": "okx_ws",
+            "off_chain_ticker": "EUR-USDT",
+            "invert": false,
+            "metadata_JSON": ""
+          }
+        ]
+      },
+      "BRL/USDT": {
+        "ticker": {
+          "currency_pair": {
+            "Base": "BRL",
+            "Quote": "USDT"
+          },
+          "decimals": 10,
+          "min_provider_count": 1,
+          "enabled": false,
+          "metadata_JSON": "{\"reference_price\":1760563380,\"liquidity\":2479974,\"aggregate_ids\":[{\"venue\":\"coinmarketcap\",\"ID\":\"2783\"}]}"
+        },
+        "provider_configs": [
+          {
+            "name": "binance_ws",
+            "off_chain_ticker": "USDTBRL",
+            "invert": true,
+            "metadata_JSON": ""
+          },
+          {
+            "name": "okx_ws",
+            "off_chain_ticker": "BRL-USDT",
+            "invert": false,
+            "metadata_JSON": ""
+          }
+        ]
+      }
+    }
+  }`
 )
 
 func init() {
-	// Unmarshal the CoinMarketCapMarketMapJSON into CoinMarketCapMarketMap.
-	if err := json.Unmarshal([]byte(CoinMarketCapMarketMapJSON), &CoinMarketCapMarketMap); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshal CoinMarketCapMarketMapJSON: %v\n", err)
+	err := errors.Join(
+		unmarshalValidate("CoinMarketCap", CoinMarketCapMarketMapJSON, &CoinMarketCapMarketMap),
+		unmarshalValidate("Raydium", RaydiumMarketMapJSON, &RaydiumMarketMap),
+		unmarshalValidate("Core", CoreMarketMapJSON, &CoreMarketMap),
+		unmarshalValidate("UniswapV3Base", UniswapV3BaseMarketMapJSON, &UniswapV3BaseMarketMap),
+		unmarshalValidate("CoinGecko", CoinGeckoMarketMapJSON, &CoinGeckoMarketMap),
+		unmarshalValidate("Osmosis", OsmosisMarketMapJSON, &OsmosisMarketMap),
+		unmarshalValidate("Polymarket", PolymarketMarketMapJSON, &PolymarketMarketMap),
+		unmarshalValidate("Forex", ForexMarketMapJSON, &ForexMarketMap),
+	)
+	if err != nil {
 		panic(err)
 	}
+}
 
-	// Unmarshal the RaydiumMarketMapJSON into RaydiumMarketMap.
-	if err := json.Unmarshal([]byte(RaydiumMarketMapJSON), &RaydiumMarketMap); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshal RaydiumMarketMapJSON: %v\n", err)
-		panic(err)
+// unmarshalValidate unmarshalls data into mm and then calls ValidateBasic.
+func unmarshalValidate(name, data string, mm *mmtypes.MarketMap) error {
+	if err := json.Unmarshal([]byte(data), mm); err != nil {
+		return fmt.Errorf("failed to unmarshal %sMarketMap: %w", name, err)
 	}
-
-	if err := RaydiumMarketMap.ValidateBasic(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to validate RaydiumMarketMap: %v\n", err)
-		panic(err)
+	if err := mm.ValidateBasic(); err != nil {
+		return fmt.Errorf("%sMarketMap failed validation: %w", name, err)
 	}
-
-	// Unmarshal the CoreMarketMapJSON into CoreMarketMap.
-	if err := json.Unmarshal([]byte(CoreMarketMapJSON), &CoreMarketMap); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshal CoreMarketMapJSON: %v\n", err)
-		panic(err)
-	}
-
-	if err := CoreMarketMap.ValidateBasic(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to validate CoreMarketMap: %v\n", err)
-		panic(err)
-	}
-
-	// Unmarshal the UniswapV3BaseMarketMapJSON into UniswapV3BaseMarketMap.
-	if err := json.Unmarshal([]byte(UniswapV3BaseMarketMapJSON), &UniswapV3BaseMarketMap); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshal UniswapV3BaseMarketMapJSON: %v\n", err)
-		panic(err)
-	}
-
-	if err := UniswapV3BaseMarketMap.ValidateBasic(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to validate UniswapV3BaseMarketMap: %v\n", err)
-		panic(err)
-	}
-
-	// Unmarshal the CoinGeckoMarketMapJSON into CoinGeckoMarketMap.
-	if err := json.Unmarshal([]byte(CoinGeckoMarketMapJSON), &CoinGeckoMarketMap); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to unmarshal CoinGeckoMarketMapJSON: %v\n", err)
-		panic(err)
-	}
-
-	if err := CoinGeckoMarketMap.ValidateBasic(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to validate CoinGeckoMarketMap: %v\n", err)
-		panic(err)
-	}
+	return nil
 }

@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/base/api/metrics"
-	providertypes "github.com/skip-mev/slinky/providers/types"
-	"github.com/skip-mev/slinky/service/clients/marketmap/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/providers/base/api/metrics"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
+	"github.com/skip-mev/connect/v2/service/clients/marketmap/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // MarketMapFetcher is the x/marketmap fetcher. This fetcher is responsible for querying the
@@ -118,25 +118,6 @@ func (f *MarketMapFetcher) Fetch(
 			providertypes.NewErrorWithCode(
 				fmt.Errorf("nil response from market map query"),
 				providertypes.ErrorGRPCGeneral,
-			),
-		)
-	}
-
-	// Validate the market map response.
-	//
-	// TODO: Add checks on the chain ID.
-	if err := resp.MarketMap.ValidateBasic(); err != nil {
-		f.logger.Info(
-			"invalid market map response from module",
-			zap.Any("market_map", resp.MarketMap),
-			zap.Error(err),
-		)
-
-		return types.NewMarketMapResponseWithErr(
-			chains,
-			providertypes.NewErrorWithCode(
-				fmt.Errorf("invalid market map response: %w", err),
-				providertypes.ErrorInvalidResponse,
 			),
 		)
 	}

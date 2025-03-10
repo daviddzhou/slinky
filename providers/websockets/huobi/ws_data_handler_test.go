@@ -6,14 +6,16 @@ import (
 	"math/big"
 	"testing"
 
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
+
 	"github.com/klauspost/compress/gzip"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base/websocket/handlers"
-	"github.com/skip-mev/slinky/providers/websockets/huobi"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base/websocket/handlers"
+	"github.com/skip-mev/connect/v2/providers/websockets/huobi"
 )
 
 var (
@@ -26,7 +28,7 @@ var (
 	logger = zap.NewExample()
 )
 
-func TestHandlerMessage(t *testing.T) {
+func TestHandleMessage(t *testing.T) {
 	testCases := []struct {
 		name          string
 		msg           func() []byte
@@ -205,7 +207,16 @@ func TestHandlerMessage(t *testing.T) {
 				return buf.Bytes()
 			},
 			resp: types.NewPriceResponse(
-				types.ResolvedPrices{},
+				types.ResolvedPrices{
+					btcusdt: {
+						Value:        big.NewFloat(0),
+						ResponseCode: providertypes.ResponseCodeUnchanged,
+					},
+					ethusdt: {
+						Value:        big.NewFloat(0),
+						ResponseCode: providertypes.ResponseCodeUnchanged,
+					},
+				},
 				types.UnResolvedPrices{},
 			),
 			updateMessage: func() []handlers.WebsocketEncodedMessage {
@@ -267,6 +278,7 @@ func TestHandlerMessage(t *testing.T) {
 			for cp, result := range tc.resp.Resolved {
 				require.Contains(t, resp.Resolved, cp)
 				require.Equal(t, result.Value, resp.Resolved[cp].Value)
+				require.Equal(t, result.ResponseCode, resp.Resolved[cp].ResponseCode)
 			}
 
 			for cp := range tc.resp.UnResolved {

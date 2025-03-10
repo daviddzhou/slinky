@@ -11,8 +11,9 @@ import (
 
 	"go.uber.org/zap"
 
-	providermetrics "github.com/skip-mev/slinky/providers/base/metrics"
-	providertypes "github.com/skip-mev/slinky/providers/types"
+	"github.com/skip-mev/connect/v2/pkg/slices"
+	providermetrics "github.com/skip-mev/connect/v2/providers/base/metrics"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
 )
 
 // fetch is the main blocker for the provider. It is responsible for fetching data from
@@ -85,23 +86,8 @@ func (p *Provider[K, V]) startMultiplexWebsocket(ctx context.Context) error {
 	if maxSubsPerConn > 0 {
 		// case where we will split ID's across sub handlers
 		numSubHandlers := int(math.Ceil(float64(len(ids)) / float64(maxSubsPerConn)))
-		p.logger.Debug("setting number of web socket handlers for provider", zap.Int("sub_handlers", numSubHandlers))
 		wg.SetLimit(numSubHandlers)
-
-		// split ids
-		for i := 0; i < numSubHandlers; i++ {
-			start := i * maxSubsPerConn
-
-			// Copy the IDs over.
-			subIDs := make([]K, 0)
-			if end := start + maxSubsPerConn; end >= len(ids) {
-				subIDs = append(subIDs, ids[start:]...)
-			} else {
-				subIDs = append(subIDs, ids[start:end]...)
-			}
-
-			subTasks = append(subTasks, subIDs)
-		}
+		subTasks = slices.Chunk(ids, maxSubsPerConn)
 	} else {
 		// case where there is 1 sub handler
 		subTasks = append(subTasks, ids)
@@ -110,14 +96,6 @@ func (p *Provider[K, V]) startMultiplexWebsocket(ctx context.Context) error {
 
 	for _, subIDs := range subTasks {
 		wg.Go(p.startWebSocket(ctx, subIDs))
-
-		select {
-		case <-time.After(p.wsCfg.HandshakeTimeout):
-			p.logger.Debug("handshake timeout reached")
-		case <-ctx.Done():
-			p.logger.Debug("context done")
-			return wg.Wait()
-		}
 	}
 
 	// Wait for all the sub handlers to finish.
@@ -211,6 +189,16 @@ func (p *Provider[K, V]) updateData(id K, result providertypes.ResolvedResult[V]
 
 	current, ok := p.data[id]
 	if !ok {
+		// Deal with the case where we have no received any updates but may have received a heartbeat.
+		if result.ResponseCode == providertypes.ResponseCodeUnchanged {
+			p.logger.Debug(
+				"result is unchanged but no current data",
+				zap.String("id", fmt.Sprint(id)),
+				zap.String("result", result.String()),
+			)
+			return
+		}
+
 		p.data[id] = result
 		return
 	}

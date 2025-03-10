@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -8,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // Keeper is the module's keeper implementation.
@@ -30,10 +32,13 @@ type Keeper struct {
 
 	// params is the module's parameters.
 	params collections.Item[types.Params]
+
+	// deleteValidationHooks are called by the keeper before any deletion call is performed.
+	deleteMarketValidationHooks types.MarketValidationHooks
 }
 
 // NewKeeper initializes the keeper and its backing stores.
-func NewKeeper(ss store.KVStoreService, cdc codec.BinaryCodec, authority sdk.AccAddress) *Keeper {
+func NewKeeper(ss store.KVStoreService, cdc codec.BinaryCodec, authority sdk.AccAddress, opts ...Option) *Keeper {
 	sb := collections.NewSchemaBuilder(ss)
 
 	// Create the collections item that will track the module parameters.
@@ -44,38 +49,51 @@ func NewKeeper(ss store.KVStoreService, cdc codec.BinaryCodec, authority sdk.Acc
 		codec.CollValue[types.Params](cdc),
 	)
 
-	return &Keeper{
-		cdc:         cdc,
-		authority:   authority,
-		markets:     collections.NewMap(sb, types.MarketsPrefix, "markets", types.TickersCodec, codec.CollValue[types.Market](cdc)),
-		lastUpdated: collections.NewItem[uint64](sb, types.LastUpdatedPrefix, "last_updated", types.LastUpdatedCodec),
-		params:      params,
-		hooks:       &types.NoopMarketMapHooks{},
+	k := &Keeper{
+		cdc:                         cdc,
+		authority:                   authority,
+		markets:                     collections.NewMap(sb, types.MarketsPrefix, "markets", types.TickersCodec, codec.CollValue[types.Market](cdc)),
+		lastUpdated:                 collections.NewItem[uint64](sb, types.LastUpdatedPrefix, "last_updated", types.LastUpdatedCodec),
+		params:                      params,
+		hooks:                       &types.NoopMarketMapHooks{},
+		deleteMarketValidationHooks: types.DefaultDeleteMarketValidationHooks(),
 	}
+
+	// apply options to default initialized keeper
+	for _, opt := range opts {
+		opt(k)
+	}
+
+	return k
+}
+
+// SetDeleteMarketValidationHooks sets the MarketValidationHooks for deletion in the keeper.
+func (k *Keeper) SetDeleteMarketValidationHooks(hooks types.MarketValidationHooks) {
+	k.deleteMarketValidationHooks = hooks
 }
 
 // SetLastUpdated sets the lastUpdated field to the current block height.
-func (k *Keeper) SetLastUpdated(ctx sdk.Context, height uint64) error {
+func (k *Keeper) SetLastUpdated(ctx context.Context, height uint64) error {
 	return k.lastUpdated.Set(ctx, height)
 }
 
 // GetLastUpdated gets the last block-height the market map was updated.
-func (k *Keeper) GetLastUpdated(ctx sdk.Context) (uint64, error) {
+func (k *Keeper) GetLastUpdated(ctx context.Context) (uint64, error) {
 	return k.lastUpdated.Get(ctx)
 }
 
 // GetMarket returns a market from the store by its currency pair string ID.
-func (k *Keeper) GetMarket(ctx sdk.Context, tickerStr string) (types.Market, error) {
+func (k *Keeper) GetMarket(ctx context.Context, tickerStr string) (types.Market, error) {
 	return k.markets.Get(ctx, types.TickerString(tickerStr))
 }
 
 // setMarket sets a market.
-func (k *Keeper) setMarket(ctx sdk.Context, market types.Market) error {
+func (k *Keeper) setMarket(ctx context.Context, market types.Market) error {
 	return k.markets.Set(ctx, types.TickerString(market.Ticker.String()), market)
 }
 
 // EnableMarket sets the Enabled field of a Market Ticker to true.
-func (k *Keeper) EnableMarket(ctx sdk.Context, tickerStr string) error {
+func (k *Keeper) EnableMarket(ctx context.Context, tickerStr string) error {
 	market, err := k.GetMarket(ctx, tickerStr)
 	if err != nil {
 		return err
@@ -87,7 +105,7 @@ func (k *Keeper) EnableMarket(ctx sdk.Context, tickerStr string) error {
 }
 
 // DisableMarket sets the Enabled field of a Market Ticker to false.
-func (k *Keeper) DisableMarket(ctx sdk.Context, tickerStr string) error {
+func (k *Keeper) DisableMarket(ctx context.Context, tickerStr string) error {
 	market, err := k.GetMarket(ctx, tickerStr)
 	if err != nil {
 		return err
@@ -100,7 +118,7 @@ func (k *Keeper) DisableMarket(ctx sdk.Context, tickerStr string) error {
 
 // GetAllMarkets returns the set of Market objects currently stored in state
 // as a map[TickerString] -> Markets.
-func (k *Keeper) GetAllMarkets(ctx sdk.Context) (map[string]types.Market, error) {
+func (k *Keeper) GetAllMarkets(ctx context.Context) (map[string]types.Market, error) {
 	iter, err := k.markets.Iterate(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -109,7 +127,6 @@ func (k *Keeper) GetAllMarkets(ctx sdk.Context) (map[string]types.Market, error)
 	if err != nil {
 		return nil, err
 	}
-
 	m := make(map[string]types.Market, len(keyValues))
 	for _, keyValue := range keyValues {
 		m[string(keyValue.Key)] = keyValue.Value
@@ -118,9 +135,29 @@ func (k *Keeper) GetAllMarkets(ctx sdk.Context) (map[string]types.Market, error)
 	return m, nil
 }
 
+// GetAllMarketsList returns the set of Market objects currently stored in state
+// as a list.
+func (k *Keeper) GetAllMarketsList(ctx context.Context) ([]types.Market, error) {
+	iter, err := k.markets.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	markets := make([]types.Market, 0)
+	for ; iter.Valid(); iter.Next() {
+		market, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+		markets = append(markets, market)
+	}
+
+	return markets, nil
+}
+
 // CreateMarket initializes a new Market.
 // The Ticker.String corresponds to a market, and must be unique.
-func (k *Keeper) CreateMarket(ctx sdk.Context, market types.Market) error {
+func (k *Keeper) CreateMarket(ctx context.Context, market types.Market) error {
 	// Check if Ticker already exists for the provider
 	alreadyExists, err := k.markets.Has(ctx, types.TickerString(market.Ticker.String()))
 	if err != nil {
@@ -134,8 +171,8 @@ func (k *Keeper) CreateMarket(ctx sdk.Context, market types.Market) error {
 }
 
 // UpdateMarket updates a Market.
-// The Ticker.String corresponds to a market, and exist unique.
-func (k *Keeper) UpdateMarket(ctx sdk.Context, market types.Market) error {
+// The Ticker.String corresponds to a market, and exists uniquely.
+func (k *Keeper) UpdateMarket(ctx context.Context, market types.Market) error {
 	// Check if Ticker already exists for the provider
 	alreadyExists, err := k.markets.Has(ctx, types.TickerString(market.Ticker.String()))
 	if err != nil {
@@ -148,33 +185,42 @@ func (k *Keeper) UpdateMarket(ctx sdk.Context, market types.Market) error {
 	return k.setMarket(ctx, market)
 }
 
-// DeleteMarket removes a Market.
-// This is currently only expected to be called in upgrade handlers, and callers will need to separately call
-// RemoveCurrencyPair on x/oracle to clean up leftover state in that module.
-func (k *Keeper) DeleteMarket(ctx sdk.Context, tickerStr string) error {
-	// Check if Ticker exists
-	alreadyExists, err := k.markets.Has(ctx, types.TickerString(tickerStr))
+// DeleteMarket removes a Market.  If the market does not exist, this is a no-op and nil is returned.
+// If the market exists, all DeleteMarketValidationHooks are called on the market before deletion.
+// Additionally, returns true if the market was deleted.
+func (k *Keeper) DeleteMarket(ctx context.Context, tickerStr string) (bool, error) {
+	market, err := k.GetMarket(ctx, tickerStr)
+	switch {
+	case errors.Is(err, collections.ErrNotFound):
+		return false, nil
+	case err != nil:
+		return false, fmt.Errorf("failed to get market for ticker %s: %w", tickerStr, err)
+	}
+
+	if err := k.deleteMarketValidationHooks.ValidateMarket(ctx, market); err != nil {
+		return false, err
+	}
+
+	err = k.markets.Remove(ctx, types.TickerString(market.Ticker.String()))
 	if err != nil {
-		return err
+		return false, err
 	}
-	if !alreadyExists {
-		return types.NewMarketDoesNotExistsError(types.TickerString(tickerStr))
-	}
-	return k.markets.Remove(ctx, types.TickerString(tickerStr))
+
+	return true, nil
 }
 
 // HasMarket checks if a market exists in the store.
-func (k *Keeper) HasMarket(ctx sdk.Context, tickerStr string) (bool, error) {
+func (k *Keeper) HasMarket(ctx context.Context, tickerStr string) (bool, error) {
 	return k.markets.Has(ctx, types.TickerString(tickerStr))
 }
 
 // SetParams sets the x/marketmap module's parameters.
-func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (k *Keeper) SetParams(ctx context.Context, params types.Params) error {
 	return k.params.Set(ctx, params)
 }
 
 // GetParams returns the x/marketmap module's parameters.
-func (k *Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
+func (k *Keeper) GetParams(ctx context.Context) (types.Params, error) {
 	return k.params.Get(ctx)
 }
 
@@ -196,13 +242,16 @@ func (k *Keeper) IsMarketValid(ctx sdk.Context, market types.Market) error {
 	// check that all markets already exist in the keeper store:
 	for _, providerConfig := range market.ProviderConfigs {
 		if providerConfig.NormalizeByPair != nil {
-			has, err := k.markets.Has(ctx, types.TickerString(providerConfig.NormalizeByPair.String()))
+			norm, err := k.markets.Get(ctx, types.TickerString(providerConfig.NormalizeByPair.String()))
 			if err != nil {
-				return err
+				return fmt.Errorf("unable to get normalize market %s for market %s: %w",
+					providerConfig.NormalizeByPair.String(), market.Ticker.String(), err)
 			}
 
-			if !has {
-				return fmt.Errorf("currency pair %s in provider config does not exist", providerConfig.NormalizeByPair.String())
+			// if the new market is enabled, its normalize by market must also be enabled
+			if market.Ticker.Enabled && !norm.Ticker.Enabled {
+				return fmt.Errorf("needed normalize market %s for market %s is not enabled",
+					providerConfig.NormalizeByPair.String(), market.Ticker.String())
 			}
 		}
 	}

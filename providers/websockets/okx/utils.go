@@ -3,7 +3,7 @@ package okx
 import (
 	"time"
 
-	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/config"
 )
 
 const (
@@ -52,7 +52,7 @@ var DefaultWebSocketConfig = config.WebSocketConfig{
 	MaxBufferSize:                 config.DefaultMaxBufferSize,
 	ReconnectionTimeout:           config.DefaultReconnectionTimeout,
 	PostConnectionTimeout:         config.DefaultPostConnectionTimeout,
-	Endpoints:                     []config.Endpoint{{URL: URL_PROD}},
+	Endpoints:                     []config.Endpoint{{URL: URL_PROD_AWS}},
 	ReadBufferSize:                config.DefaultReadBufferSize,
 	WriteBufferSize:               config.DefaultWriteBufferSize,
 	HandshakeTimeout:              config.DefaultHandshakeTimeout,

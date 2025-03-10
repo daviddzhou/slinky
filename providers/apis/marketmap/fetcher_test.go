@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	"github.com/skip-mev/slinky/providers/apis/coinbase"
-	"github.com/skip-mev/slinky/providers/apis/marketmap"
-	providertypes "github.com/skip-mev/slinky/providers/types"
-	"github.com/skip-mev/slinky/service/clients/marketmap/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/mocks"
+	connecttypes "github.com/skip-mev/connect/v2/pkg/types"
+	"github.com/skip-mev/connect/v2/providers/apis/coinbase"
+	"github.com/skip-mev/connect/v2/providers/apis/marketmap"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
+	"github.com/skip-mev/connect/v2/service/clients/marketmap/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types/mocks"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 		},
 	}
 
-	btcusd = slinkytypes.NewCurrencyPair("BTC", "USD")
+	btcusd = connecttypes.NewCurrencyPair("BTC", "USD")
 
 	goodMarketMap = mmtypes.MarketMap{
 		Markets: map[string]mmtypes.Market{
@@ -120,22 +120,28 @@ func TestFetch(t *testing.T) {
 			},
 		},
 		{
-			name:   "errors when the market map response is invalid",
+			name:   "does not error when the market map response is invalid",
 			chains: chains[:1],
 			client: func() mmtypes.QueryClient {
 				c := mocks.NewQueryClient(t)
 				c.On("MarketMap", mock.Anything, mock.Anything).Return(
 					&mmtypes.MarketMapResponse{
-						MarketMap: badMarketMap,
+						MarketMap:   badMarketMap,
+						ChainId:     chains[0].ChainID,
+						LastUpdated: 11,
 					},
 					nil,
 				)
 				return c
 			},
 			expected: types.MarketMapResponse{
-				UnResolved: types.UnResolvedMarketMap{
-					chains[0]: providertypes.UnresolvedResult{
-						ErrorWithCode: providertypes.NewErrorWithCode(fmt.Errorf("invalid market map response"), providertypes.ErrorAPIGeneral),
+				Resolved: types.ResolvedMarketMap{
+					chains[0]: types.MarketMapResult{
+						Value: &mmtypes.MarketMapResponse{
+							MarketMap:   badMarketMap,
+							ChainId:     chains[0].ChainID,
+							LastUpdated: 11,
+						},
 					},
 				},
 			},

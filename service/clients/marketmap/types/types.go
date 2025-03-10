@@ -1,17 +1,15 @@
 package types
 
 import (
-	"fmt"
-
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/base"
-	apihandlers "github.com/skip-mev/slinky/providers/base/api/handlers"
-	apimetrics "github.com/skip-mev/slinky/providers/base/api/metrics"
-	providermetrics "github.com/skip-mev/slinky/providers/base/metrics"
-	providertypes "github.com/skip-mev/slinky/providers/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/providers/base"
+	apihandlers "github.com/skip-mev/connect/v2/providers/base/api/handlers"
+	apimetrics "github.com/skip-mev/connect/v2/providers/base/api/metrics"
+	providermetrics "github.com/skip-mev/connect/v2/providers/base/metrics"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // ConfigType is the type of the API/WebSocket configuration.
@@ -26,7 +24,7 @@ type Chain struct {
 
 // String returns the string representation of the Chain schema.
 func (mms Chain) String() string {
-	return fmt.Sprintf("ChainID: %s", mms.ChainID)
+	return mms.ChainID
 }
 
 type (

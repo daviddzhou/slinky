@@ -6,16 +6,16 @@ import (
 	"math/big"
 	"testing"
 
-	providertypes "github.com/skip-mev/slinky/providers/types"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
 
 	"go.uber.org/zap"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base/websocket/handlers"
-	"github.com/skip-mev/slinky/providers/websockets/kucoin"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base/websocket/handlers"
+	"github.com/skip-mev/connect/v2/providers/websockets/kucoin"
 )
 
 var (
@@ -68,7 +68,18 @@ func TestHandleMessage(t *testing.T) {
 					"type": "pong"
 				}`)
 			},
-			resp:        types.PriceResponse{},
+			resp: types.PriceResponse{
+				Resolved: types.ResolvedPrices{
+					btcusdt: {
+						Value:        big.NewFloat(0),
+						ResponseCode: providertypes.ResponseCodeUnchanged,
+					},
+					ethusdt: {
+						Value:        big.NewFloat(0),
+						ResponseCode: providertypes.ResponseCodeUnchanged,
+					},
+				},
+			},
 			updateMsg:   func() []handlers.WebsocketEncodedMessage { return nil },
 			expectedErr: false,
 		},
@@ -292,14 +303,15 @@ func TestHandleMessage(t *testing.T) {
 			require.NoError(t, err)
 
 			// The response should contain a single resolved price update.
-			require.LessOrEqual(t, len(resp.Resolved), 1)
-			require.LessOrEqual(t, len(resp.UnResolved), 1)
+			require.LessOrEqual(t, len(resp.Resolved), 2)
+			require.LessOrEqual(t, len(resp.UnResolved), 2)
 
 			require.Equal(t, tc.updateMsg(), updateMsg)
 
 			for cp, result := range tc.resp.Resolved {
 				require.Contains(t, resp.Resolved, cp)
 				require.Equal(t, result.Value.SetPrec(18), resp.Resolved[cp].Value.SetPrec(18))
+				require.Equal(t, result.ResponseCode, resp.Resolved[cp].ResponseCode)
 			}
 
 			for cp := range tc.resp.UnResolved {

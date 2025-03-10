@@ -7,7 +7,7 @@ import (
 
 // APIConfig defines a config for an API based data provider.
 type APIConfig struct {
-	// Enabled is a flag that indicates whether the provider is API based.
+	// Enabled indicates if the provider is enabled.
 	Enabled bool `json:"enabled"`
 
 	// Timeout is the amount of time the provider should wait for a response from
@@ -40,6 +40,11 @@ type APIConfig struct {
 
 	// Name is the name of the provider that corresponds to this config.
 	Name string `json:"name"`
+
+	// MaxBlockHeightAge is the oldest an update from an on-chain data source can be without having its
+	// block height incremented.  In the case where a data source has exceeded this limit and the block
+	// height is not increasing, price reporting will be skipped until the block height increases.
+	MaxBlockHeightAge time.Duration `json:"maxBlockHeightAge"`
 }
 
 // Endpoint holds all data necessary for an API provider to connect to a given endpoint
@@ -121,6 +126,10 @@ func (c *APIConfig) ValidateBasic() error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
+	}
+
+	if c.MaxBlockHeightAge < 0 {
+		return fmt.Errorf("max_block_height_age cannot be negative")
 	}
 
 	return nil

@@ -16,8 +16,8 @@ import (
 
 var (
 	providerChainID       = "provider-1"
-	providerNumValidators = int(4)
-	providerVersion       = "v5.0.0-rc0"
+	providerNumValidators = 4
+	providerVersion       = "v6.0.0"
 )
 
 // CCVChainConstructor is a constructor for the CCV chain
@@ -80,7 +80,7 @@ func CCVInterchainConstructor(ctx context.Context, t *testing.T, chains []*cosmo
 		zaptest.NewLogger(t),
 	).Build(t, client, network)
 
-	path := "slinky-ibc-path"
+	path := "connect-ibc-path"
 	// create the interchain
 	ic := interchaintest.NewInterchain().
 		AddChain(chains[0]).

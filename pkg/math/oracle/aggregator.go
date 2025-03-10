@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle"
-	oraclemetrics "github.com/skip-mev/slinky/oracle/metrics"
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/pkg/math"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle"
+	oraclemetrics "github.com/skip-mev/connect/v2/oracle/metrics"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/pkg/math"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 var _ oracle.PriceAggregator = &IndexPriceAggregator{}
@@ -77,6 +77,8 @@ func (m *IndexPriceAggregator) AggregatePrices() {
 	indexPrices := make(types.Prices)
 	scaledPrices := make(types.Prices)
 
+	var missingPrices []string
+
 	for ticker, market := range m.cfg.Markets {
 		if !market.Ticker.Enabled {
 			m.logger.Debug("skipping disabled market", zap.Any("market", market))
@@ -91,13 +93,14 @@ func (m *IndexPriceAggregator) AggregatePrices() {
 		m.metrics.AddProviderCountForMarket(target.String(), len(convertedPrices))
 
 		// We need to have at least the minimum number of providers to calculate the median.
-		if len(convertedPrices) < int(target.MinProviderCount) {
-			m.logger.Error(
+		if len(convertedPrices) < int(target.MinProviderCount) { //nolint:gosec
+			missingPrices = append(missingPrices, ticker)
+			m.logger.Debug(
 				"insufficient amount of converted prices",
 				zap.String("target_ticker", ticker),
 				zap.Int("num_converted_prices", len(convertedPrices)),
 				zap.Any("converted_prices", convertedPrices),
-				zap.Int("min_provider_count", int(target.MinProviderCount)),
+				zap.Int("min_provider_count", int(target.MinProviderCount)), //nolint:gosec
 			)
 
 			continue
@@ -114,7 +117,6 @@ func (m *IndexPriceAggregator) AggregatePrices() {
 		m.logger.Debug(
 			"calculated median price",
 			zap.String("target_ticker", ticker),
-
 			zap.String("unscaled_price", indexPrices[target.String()].String()),
 			zap.String("scaled_price", scaledPrices[target.String()].String()),
 			zap.Any("converted_prices", convertedPrices),
@@ -127,6 +129,10 @@ func (m *IndexPriceAggregator) AggregatePrices() {
 	// Update the aggregated data. These prices are going to be used as the index prices the
 	// next time we calculate prices.
 	m.logger.Debug("calculated median prices for price feeds", zap.Int("num_prices", len(indexPrices)))
+	m.metrics.MissingPrices(missingPrices)
+	if len(missingPrices) > 0 {
+		m.logger.Info("failed to calculate prices for price feeds", zap.Strings("missing_prices", missingPrices))
+	}
 	m.indexPrices = indexPrices
 	m.scaledPrices = scaledPrices
 }

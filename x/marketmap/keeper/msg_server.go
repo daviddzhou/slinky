@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // msgServer is the default implementation of the x/marketmap MsgService.
@@ -34,10 +34,6 @@ func (ms msgServer) UpsertMarkets(goCtx context.Context, msg *types.MsgUpsertMar
 		return nil, fmt.Errorf("unable to verify market authorities: %w", err)
 	}
 
-	resp := &types.MsgUpsertMarketsResponse{
-		MarketUpdates: make(map[string]bool),
-	}
-
 	// iterate over all markets and either create them (if no market exists), or update them
 	for _, market := range msg.Markets {
 		// check if market exists
@@ -59,7 +55,6 @@ func (ms msgServer) UpsertMarkets(goCtx context.Context, msg *types.MsgUpsertMar
 				return nil, err
 			}
 
-			resp.MarketUpdates[market.Ticker.String()] = false
 			eventType = types.EventTypeCreateMarket
 		} else {
 			err = ms.k.UpdateMarket(ctx, market)
@@ -72,7 +67,6 @@ func (ms msgServer) UpsertMarkets(goCtx context.Context, msg *types.MsgUpsertMar
 				return nil, err
 			}
 
-			resp.MarketUpdates[market.Ticker.String()] = true
 			eventType = types.EventTypeUpdateMarket
 		}
 
@@ -91,7 +85,7 @@ func (ms msgServer) UpsertMarkets(goCtx context.Context, msg *types.MsgUpsertMar
 		return nil, err
 	}
 
-	return resp, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight()))
+	return &types.MsgUpsertMarketsResponse{}, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight())) //nolint:gosec
 }
 
 // CreateMarkets updates the marketmap by creating markets from the given message.  All updates are made to the market
@@ -132,7 +126,7 @@ func (ms msgServer) CreateMarkets(goCtx context.Context, msg *types.MsgCreateMar
 		return nil, fmt.Errorf("invalid state resulting from update: %w", err)
 	}
 
-	return &types.MsgCreateMarketsResponse{}, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight()))
+	return &types.MsgCreateMarketsResponse{}, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight())) //nolint:gosec
 }
 
 // UpdateMarkets updates the marketmap by updating markets from the given message.  All updates are made to the market
@@ -172,7 +166,7 @@ func (ms msgServer) UpdateMarkets(goCtx context.Context, msg *types.MsgUpdateMar
 		return nil, fmt.Errorf("invalid state resulting from update: %w", err)
 	}
 
-	return &types.MsgUpdateMarketsResponse{}, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight()))
+	return &types.MsgUpdateMarketsResponse{}, ms.k.SetLastUpdated(ctx, uint64(ctx.BlockHeight())) //nolint:gosec
 }
 
 // verifyMarketAuthorities verifies that the msg-submitter is a market-authority
@@ -254,6 +248,57 @@ func (ms msgServer) RemoveMarketAuthorities(goCtx context.Context, msg *types.Ms
 	}
 
 	return &types.MsgRemoveMarketAuthoritiesResponse{}, nil
+}
+
+// RemoveMarkets attempts to remove the provided markets from the MarketMap. Stateful validation is performed on these
+// markets using the configured ValidationHooks.
+func (ms msgServer) RemoveMarkets(
+	goCtx context.Context,
+	msg *types.MsgRemoveMarkets) (
+	*types.MsgRemoveMarketsResponse, error,
+) {
+	if msg == nil {
+		return nil, fmt.Errorf("unable to process nil msg")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// perform basic msg validity checks
+	if err := ms.verifyMarketAuthorities(ctx, msg); err != nil {
+		return nil, fmt.Errorf("unable to verify market authorities: %w", err)
+	}
+
+	deletedMarkets := make([]string, 0, len(msg.Markets))
+	for _, market := range msg.Markets {
+		deleted, err := ms.k.DeleteMarket(ctx, market)
+		if err != nil {
+			return nil, fmt.Errorf("unable to delete market: %w", err)
+		}
+
+		if deleted {
+			ctx.Logger().Info(fmt.Sprintf("deleted market %s", market))
+			deletedMarkets = append(deletedMarkets, market)
+		}
+
+		if err := ms.k.hooks.AfterMarketRemoved(ctx, market); err != nil {
+			return nil, fmt.Errorf("unable to run market removal hook: %w", err)
+		}
+	}
+
+	// check if the resulting state is valid: it may not be valid if the removed market is used as a normalization pair
+	allMarkets, err := ms.k.GetAllMarkets(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	mm := types.MarketMap{Markets: allMarkets}
+	if err := mm.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf("invalid state resulting from removals: %w", err)
+	}
+
+	return &types.MsgRemoveMarketsResponse{
+		DeletedMarkets: deletedMarkets,
+	}, nil
 }
 
 // checkMarketAuthority checks if the given authority is the x/marketmap's list of MarketAuthorities.

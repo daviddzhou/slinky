@@ -8,8 +8,8 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/oracle/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/types"
 )
 
 const (
@@ -135,7 +135,7 @@ func SolanaJSONRPCError(err error) error {
 	return fmt.Errorf("solana json-rpc error: %s", err.Error())
 }
 
-// DefaultAPIPriceFetcherConfig is the default configuration for the Raydium API price fetcher.
+// DefaultAPIConfig is the default configuration for the Raydium API price fetcher.
 var DefaultAPIConfig = config.APIConfig{
 	Enabled:          true,
 	Name:             Name,
@@ -150,4 +150,5 @@ var DefaultAPIConfig = config.APIConfig{
 			URL: "https://api.mainnet-beta.solana.com",
 		},
 	},
+	MaxBlockHeightAge: 30 * time.Second,
 }

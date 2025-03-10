@@ -5,15 +5,15 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-	"github.com/skip-mev/slinky/providers/apis/marketmap"
-	"github.com/skip-mev/slinky/providers/base"
-	apihandlers "github.com/skip-mev/slinky/providers/base/api/handlers"
-	apimetrics "github.com/skip-mev/slinky/providers/base/api/metrics"
-	providermetrics "github.com/skip-mev/slinky/providers/base/metrics"
-	"github.com/skip-mev/slinky/service/clients/marketmap/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/providers/apis/dydx"
+	"github.com/skip-mev/connect/v2/providers/apis/marketmap"
+	"github.com/skip-mev/connect/v2/providers/base"
+	apihandlers "github.com/skip-mev/connect/v2/providers/base/api/handlers"
+	apimetrics "github.com/skip-mev/connect/v2/providers/base/api/metrics"
+	providermetrics "github.com/skip-mev/connect/v2/providers/base/metrics"
+	"github.com/skip-mev/connect/v2/service/clients/marketmap/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // MarketMapProviderFactory returns a sample implementation of the market map provider. This provider
@@ -49,11 +49,11 @@ func MarketMapProviderFactory(
 		return nil, err
 	}
 
-	switch name := cfg.Name; {
-	case name == dydx.Name:
+	switch cfg.Name {
+	case dydx.Name:
 		apiDataHandler, err = dydx.NewAPIHandler(logger, cfg.API)
 		ids = []types.Chain{{ChainID: dydx.ChainID}}
-	case name == dydx.SwitchOverAPIHandlerName:
+	case dydx.SwitchOverAPIHandlerName:
 		marketMapFetcher, err = dydx.NewDefaultSwitchOverMarketMapFetcher(
 			logger,
 			cfg.API,
@@ -61,7 +61,7 @@ func MarketMapProviderFactory(
 			apiMetrics,
 		)
 		ids = []types.Chain{{ChainID: dydx.ChainID}}
-	case name == dydx.ResearchAPIHandlerName || name == dydx.ResearchCMCAPIHandlerName:
+	case dydx.ResearchAPIHandlerName, dydx.ResearchCMCAPIHandlerName:
 		marketMapFetcher, err = dydx.DefaultDYDXResearchMarketMapFetcher(
 			requestHandler,
 			apiMetrics,

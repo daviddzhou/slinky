@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/skip-mev/slinky/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/config"
 )
 
 func TestAPIConfig(t *testing.T) {
@@ -134,6 +134,36 @@ func TestAPIConfig(t *testing.T) {
 				BatchSize:        1,
 			},
 			expectedErr: false,
+		},
+		{
+			name: "good config with max_block_height_age",
+			config: config.APIConfig{
+				Enabled:           true,
+				Timeout:           time.Second,
+				Interval:          time.Second,
+				ReconnectTimeout:  time.Second,
+				MaxQueries:        1,
+				Name:              "test",
+				Endpoints:         []config.Endpoint{{URL: "http://test.com"}},
+				BatchSize:         1,
+				MaxBlockHeightAge: 10 * time.Second,
+			},
+			expectedErr: false,
+		},
+		{
+			name: "bad config with negative max_block_height_age",
+			config: config.APIConfig{
+				Enabled:           true,
+				Timeout:           time.Second,
+				Interval:          time.Second,
+				ReconnectTimeout:  time.Second,
+				MaxQueries:        1,
+				Name:              "test",
+				Endpoints:         []config.Endpoint{{URL: "http://test.com"}},
+				BatchSize:         1,
+				MaxBlockHeightAge: -10 * time.Second,
+			},
+			expectedErr: true,
 		},
 		{
 			name: "bad config with invalid endpoint (no url)",

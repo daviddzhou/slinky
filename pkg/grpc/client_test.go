@@ -6,12 +6,13 @@ import (
 	"net"
 	"testing"
 
-	slinkygrpc "github.com/skip-mev/slinky/pkg/grpc"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	reflectionpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
+
+	connectgrpc "github.com/skip-mev/connect/v2/pkg/grpc"
 )
 
 func TestClient(t *testing.T) {
@@ -38,7 +39,7 @@ func TestClient(t *testing.T) {
 
 	t.Run("try dialing via non supported GRPC target URL (i.e tcp prefix)", func(t *testing.T) {
 		// try dialing via non supported GRPC target URL (i.e tcp prefix)
-		client, err := slinkygrpc.NewClient(fmt.Sprintf("tcp://localhost:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		client, err := connectgrpc.NewClient(fmt.Sprintf("tcp://localhost:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		require.NoError(t, err)
 
 		// ping the server
@@ -48,7 +49,7 @@ func TestClient(t *testing.T) {
 
 	t.Run("try dialing via supported GRPC target URL (i.e host:port)", func(t *testing.T) {
 		// try dialing via supported GRPC target URL (i.e host:port)
-		client, err := slinkygrpc.NewClient(fmt.Sprintf("localhost:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		client, err := connectgrpc.NewClient(fmt.Sprintf("localhost:%s", port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		require.NoError(t, err)
 
 		// ping the server

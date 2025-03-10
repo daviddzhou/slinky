@@ -10,9 +10,9 @@ import (
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gagliardetto/solana-go/rpc/jsonrpc"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	slinkyhttp "github.com/skip-mev/slinky/pkg/http"
-	"github.com/skip-mev/slinky/providers/base/api/metrics"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	connecthttp "github.com/skip-mev/connect/v2/pkg/http"
+	"github.com/skip-mev/connect/v2/providers/base/api/metrics"
 )
 
 // JSONRPCClient is an implementation of the Solana JSON RPC client with
@@ -76,35 +76,35 @@ func (c *JSONRPCClient) GetMultipleAccountsWithOpts(
 	ctx context.Context,
 	accounts []solana.PublicKey,
 	opts *rpc.GetMultipleAccountsOpts,
-) (out *rpc.GetMultipleAccountsResult, err error) {
+) (*rpc.GetMultipleAccountsResult, error) {
 	start := time.Now()
 	defer func() {
 		c.apiMetrics.ObserveProviderResponseLatency(c.api.Name, c.redactedURL, time.Since(start))
 	}()
 
-	out, err = c.client.GetMultipleAccountsWithOpts(ctx, accounts, opts)
+	out, err := c.client.GetMultipleAccountsWithOpts(ctx, accounts, opts)
 	if err != nil {
 		c.apiMetrics.AddRPCStatusCode(c.api.Name, c.redactedURL, metrics.RPCCodeError)
-		return
+		return nil, err
 	}
 
 	c.apiMetrics.AddRPCStatusCode(c.api.Name, c.redactedURL, metrics.RPCCodeOK)
-	return
+	return out, nil
 }
 
 // solanaClientFromEndpoint creates a new SolanaJSONRPCClient from an endpoint.
 func solanaClientFromEndpoint(endpoint config.Endpoint) (*rpc.Client, error) {
-	opts := []slinkyhttp.HeaderOption{
-		slinkyhttp.WithSlinkyVersionUserAgent(),
+	opts := []connecthttp.HeaderOption{
+		connecthttp.WithConnectVersionUserAgent(),
 	}
 
 	// if authentication is enabled
 	if endpoint.Authentication.Enabled() {
 		// add authentication header
-		opts = append(opts, slinkyhttp.WithAuthentication(endpoint.Authentication.APIKeyHeader, endpoint.Authentication.APIKey))
+		opts = append(opts, connecthttp.WithAuthentication(endpoint.Authentication.APIKeyHeader, endpoint.Authentication.APIKey))
 	}
 
-	transport := slinkyhttp.NewRoundTripperWithHeaders(http.DefaultTransport, opts...)
+	transport := connecthttp.NewRoundTripperWithHeaders(http.DefaultTransport, opts...)
 
 	client := rpc.NewWithCustomRPCClient(jsonrpc.NewClientWithOpts(endpoint.URL, &jsonrpc.RPCClientOpts{
 		HTTPClient: &http.Client{

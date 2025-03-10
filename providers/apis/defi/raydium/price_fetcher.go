@@ -3,6 +3,7 @@ package raydium
 import (
 	"context"
 	"fmt"
+	gomath "math"
 	"math/big"
 	"time"
 
@@ -14,15 +15,15 @@ import (
 
 	"github.com/gagliardetto/solana-go/programs/serum"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	oracletypes "github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/pkg/math"
-	"github.com/skip-mev/slinky/providers/apis/defi/raydium/schema"
-	"github.com/skip-mev/slinky/providers/base/api/metrics"
-	providertypes "github.com/skip-mev/slinky/providers/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	oracletypes "github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/pkg/math"
+	"github.com/skip-mev/connect/v2/providers/apis/defi/raydium/schema"
+	"github.com/skip-mev/connect/v2/providers/base/api/metrics"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
 )
 
-var _ oracletypes.PriceAPIFetcher = (*APIPriceFetcher)(nil)
+var _ oracletypes.PriceAPIFetcher = &APIPriceFetcher{}
 
 // SolanaJSONRPCClient is the expected interface for a solana JSON-RPC client according
 // to the APIPriceFetcher.
@@ -149,7 +150,7 @@ func NewAPIPriceFetcherWithClient(
 	return pf, nil
 }
 
-// FetchPrices fetches prices from the solana JSON-RPC API for the given currency-pairs. Specifically
+// Fetch fetches prices from the solana JSON-RPC API for the given currency-pairs. Specifically
 // for each currency-pair,
 //   - Query the raydium API base (coin) / quote (pc) token vault addresses
 //   - Normalize the token balances by 1e18
@@ -159,7 +160,11 @@ func (pf *APIPriceFetcher) Fetch(
 	tickers []oracletypes.ProviderTicker,
 ) oracletypes.PriceResponse {
 	// get the accounts to query in order of the tickers given
-	expectedNumAccounts := len(tickers) * 4
+	expectedNumAccounts := len(tickers) * 4 // for each ticker, we query 4 accounts (base, quote, amm, open orders)
+
+	// accounts is a contiguous slice of solana.PublicKey.
+	// each ticker takes up 4 slots. this is functionally equivalent to [][]solana.PubKey,
+	// however, storing in one slice allows us query without rearranging the request data (i.e. converting [][] to []).
 	accounts := make([]solana.PublicKey, expectedNumAccounts)
 
 	for i, ticker := range tickers {
@@ -188,7 +193,7 @@ func (pf *APIPriceFetcher) Fetch(
 	defer cancel()
 
 	accountsResp, err := pf.client.GetMultipleAccountsWithOpts(ctx, accounts, &rpc.GetMultipleAccountsOpts{
-		Commitment: rpc.CommitmentFinalized,
+		Commitment: rpc.CommitmentConfirmed,
 		// TODO(nikhil): Keep track of latest height queried as well?
 	})
 	if err != nil {
@@ -395,6 +400,15 @@ func calculatePrice(
 	baseTokenBalance, quoteTokenBalance *big.Int,
 	baseTokenDecimals, quoteTokenDecimals uint64,
 ) *big.Float {
+	if baseTokenDecimals > gomath.MaxInt64 {
+		baseTokenDecimals = gomath.MaxInt64
+	}
+
+	if quoteTokenDecimals > gomath.MaxInt64 {
+		quoteTokenDecimals = gomath.MaxInt64
+	}
+
+	//nolint:gosec // handled above
 	scalingFactor := math.GetScalingFactor(int64(baseTokenDecimals), int64(quoteTokenDecimals))
 
 	// calculate the price as quote / base

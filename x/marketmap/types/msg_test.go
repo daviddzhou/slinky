@@ -6,12 +6,12 @@ import (
 	"github.com/skip-mev/chaintestutil/sample"
 	"github.com/stretchr/testify/require"
 
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	"github.com/skip-mev/slinky/x/marketmap/types"
+	connecttypes "github.com/skip-mev/connect/v2/pkg/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 func TestValidateBasicMsgUpsertMarket(t *testing.T) {
-	validCurrencyPair := slinkytypes.CurrencyPair{
+	validCurrencyPair := connecttypes.CurrencyPair{
 		Base:  "BTC",
 		Quote: "ETH",
 	}
@@ -147,7 +147,7 @@ func TestValidateBasicMsgUpsertMarket(t *testing.T) {
 }
 
 func TestValidateBasicMsgCreateMarket(t *testing.T) {
-	validCurrencyPair := slinkytypes.CurrencyPair{
+	validCurrencyPair := connecttypes.CurrencyPair{
 		Base:  "BTC",
 		Quote: "ETH",
 	}
@@ -280,7 +280,7 @@ func TestValidateBasicMsgCreateMarket(t *testing.T) {
 }
 
 func TestValidateBasicMsgUpdateMarket(t *testing.T) {
-	validCurrencyPair := slinkytypes.CurrencyPair{
+	validCurrencyPair := connecttypes.CurrencyPair{
 		Base:  "BTC",
 		Quote: "ETH",
 	}
@@ -500,6 +500,67 @@ func TestValidateBasicMsgRemoveMarketAuthorities(t *testing.T) {
 			msg: types.MsgRemoveMarketAuthorities{
 				RemoveAddresses: []string{sampleAuth, sampleAuth},
 				Admin:           sample.Address(rng),
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if !tc.expectPass {
+				require.NotNil(t, err)
+			} else {
+				require.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateBasicMsgRemoveMarkets(t *testing.T) {
+	rng := sample.Rand()
+
+	tcs := []struct {
+		name       string
+		msg        types.MsgRemoveMarkets
+		expectPass bool
+	}{
+		{
+			"if the Authority is not an acc-address - fail",
+			types.MsgRemoveMarkets{
+				Authority: "invalid",
+			},
+			false,
+		},
+		{
+			name: "invalid message (no markets) - fail",
+			msg: types.MsgRemoveMarkets{
+				Markets:   nil,
+				Authority: sample.Address(rng),
+			},
+			expectPass: false,
+		},
+		{
+			name: "valid message - single market",
+			msg: types.MsgRemoveMarkets{
+				Markets:   []string{"USDT/USD"},
+				Authority: sample.Address(rng),
+			},
+			expectPass: true,
+		},
+		{
+			name: "valid message - multiple markets",
+			msg: types.MsgRemoveMarkets{
+				Markets:   []string{"USDT/USD", "ETH/USD"},
+				Authority: sample.Address(rng),
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid message (duplicate markets",
+			msg: types.MsgRemoveMarkets{
+				Markets:   []string{"USDT/USD", "USDT/USD"},
+				Authority: sample.Address(rng),
 			},
 			expectPass: false,
 		},

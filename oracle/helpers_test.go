@@ -8,27 +8,29 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/skip-mev/slinky/oracle"
-	"github.com/skip-mev/slinky/oracle/config"
-	oracletypes "github.com/skip-mev/slinky/oracle/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	"github.com/skip-mev/slinky/providers/apis/binance"
-	"github.com/skip-mev/slinky/providers/apis/coinbase"
-	"github.com/skip-mev/slinky/providers/apis/dydx"
-	"github.com/skip-mev/slinky/providers/base"
-	"github.com/skip-mev/slinky/providers/base/api/handlers/mocks"
-	apimetrics "github.com/skip-mev/slinky/providers/base/api/metrics"
-	providermetrics "github.com/skip-mev/slinky/providers/base/metrics"
-	"github.com/skip-mev/slinky/providers/static"
-	providertypes "github.com/skip-mev/slinky/providers/types"
-	"github.com/skip-mev/slinky/providers/websockets/okx"
-	mmclienttypes "github.com/skip-mev/slinky/service/clients/marketmap/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	oracletypes "github.com/skip-mev/connect/v2/oracle/types"
+	connecttypes "github.com/skip-mev/connect/v2/pkg/types"
+	"github.com/skip-mev/connect/v2/providers/apis/binance"
+	"github.com/skip-mev/connect/v2/providers/apis/coinbase"
+	"github.com/skip-mev/connect/v2/providers/apis/dydx"
+	"github.com/skip-mev/connect/v2/providers/base"
+	"github.com/skip-mev/connect/v2/providers/base/api/handlers/mocks"
+	apimetrics "github.com/skip-mev/connect/v2/providers/base/api/metrics"
+	providermetrics "github.com/skip-mev/connect/v2/providers/base/metrics"
+	"github.com/skip-mev/connect/v2/providers/static"
+	providertypes "github.com/skip-mev/connect/v2/providers/types"
+	"github.com/skip-mev/connect/v2/providers/websockets/okx"
+	mmclienttypes "github.com/skip-mev/connect/v2/service/clients/marketmap/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 var (
-	btcusdtCP = slinkytypes.NewCurrencyPair("BTC", "USDT")
-	ethusdtCP = slinkytypes.NewCurrencyPair("ETH", "USDT")
+	btcusdtCP = connecttypes.NewCurrencyPair("BTC", "USDT")
+	btcusdCP  = connecttypes.NewCurrencyPair("BTC", "USD")
+	usdtusdCP = connecttypes.NewCurrencyPair("USDT", "USD")
+	ethusdtCP = connecttypes.NewCurrencyPair("ETH", "USDT")
 )
 
 var (
@@ -37,6 +39,9 @@ var (
 	oracleCfg = config.OracleConfig{
 		Metrics: config.MetricsConfig{
 			Enabled: false,
+			Telemetry: config.TelemetryConfig{
+				Disabled: true,
+			},
 		},
 		UpdateInterval: 1500 * time.Millisecond,
 		MaxPriceAge:    2 * time.Minute,
@@ -64,6 +69,9 @@ var (
 	oracleCfgWithMapper = config.OracleConfig{
 		Metrics: config.MetricsConfig{
 			Enabled: false,
+			Telemetry: config.TelemetryConfig{
+				Disabled: true,
+			},
 		},
 		UpdateInterval: 1500 * time.Millisecond,
 		MaxPriceAge:    2 * time.Minute,
@@ -93,6 +101,9 @@ var (
 	oracleCfgWithMockMapper = config.OracleConfig{
 		Metrics: config.MetricsConfig{
 			Enabled: false,
+			Telemetry: config.TelemetryConfig{
+				Disabled: true,
+			},
 		},
 		UpdateInterval: 1500 * time.Millisecond,
 		MaxPriceAge:    2 * time.Minute,
@@ -122,6 +133,9 @@ var (
 	oracleCfgWithOnlyMockMapper = config.OracleConfig{
 		Metrics: config.MetricsConfig{
 			Enabled: false,
+			Telemetry: config.TelemetryConfig{
+				Disabled: true,
+			},
 		},
 		UpdateInterval: 1500 * time.Millisecond,
 		MaxPriceAge:    2 * time.Minute,
@@ -152,6 +166,72 @@ var (
 			Name:             "mock-mapper",
 		},
 		Type: mmclienttypes.ConfigType,
+	}
+
+	validMarketMapSubset = mmtypes.MarketMap{
+		Markets: map[string]mmtypes.Market{
+			ethusdtCP.String(): {
+				Ticker: mmtypes.Ticker{
+					CurrencyPair:     ethusdtCP,
+					MinProviderCount: 1,
+					Decimals:         8,
+					Enabled:          true,
+				},
+				ProviderConfigs: []mmtypes.ProviderConfig{
+					{
+						Name:           coinbase.Name,
+						OffChainTicker: coinbaseethusd.GetOffChainTicker(),
+					},
+					{
+						Name:           okx.Name,
+						OffChainTicker: okxethusd.GetOffChainTicker(),
+					},
+				},
+			},
+		},
+	}
+
+	partialInvalidMarketMap = mmtypes.MarketMap{
+		Markets: map[string]mmtypes.Market{
+			btcusdCP.String(): {
+				Ticker: mmtypes.Ticker{
+					CurrencyPair:     btcusdCP,
+					MinProviderCount: 1,
+					Decimals:         8,
+					Enabled:          true,
+				},
+				ProviderConfigs: []mmtypes.ProviderConfig{
+					{
+						Name:            coinbase.Name,
+						OffChainTicker:  coinbasebtcusd.GetOffChainTicker(),
+						NormalizeByPair: &usdtusdCP,
+					},
+					{
+						Name:            okx.Name,
+						OffChainTicker:  okxbtcusd.GetOffChainTicker(),
+						NormalizeByPair: &usdtusdCP,
+					},
+				},
+			},
+			ethusdtCP.String(): {
+				Ticker: mmtypes.Ticker{
+					CurrencyPair:     ethusdtCP,
+					MinProviderCount: 1,
+					Decimals:         8,
+					Enabled:          true,
+				},
+				ProviderConfigs: []mmtypes.ProviderConfig{
+					{
+						Name:           coinbase.Name,
+						OffChainTicker: coinbaseethusd.GetOffChainTicker(),
+					},
+					{
+						Name:           okx.Name,
+						OffChainTicker: okxethusd.GetOffChainTicker(),
+					},
+				},
+			},
+		},
 	}
 
 	// Coinbase and OKX are supported by the marketmap.

@@ -7,10 +7,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/oracle/types"
-	"github.com/skip-mev/slinky/providers/base"
-	mmclienttypes "github.com/skip-mev/slinky/service/clients/marketmap/types"
+	"github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/oracle/types"
+	"github.com/skip-mev/connect/v2/providers/base"
+	mmclienttypes "github.com/skip-mev/connect/v2/service/clients/marketmap/types"
 )
 
 // Init initializes the all providers that are configured via the oracle config.
@@ -102,8 +102,9 @@ func (o *OracleImpl) createPriceProvider(ctx context.Context, cfg config.Provide
 	// Add the provider to the oracle.
 	o.priceProviders[provider.Name()] = state
 
+	// Add the provider name to the message here since we want these to ignore log sampling limits
 	o.logger.Info(
-		"created price provider state",
+		fmt.Sprintf("created %s provider state", provider.Name()),
 		zap.String("provider", provider.Name()),
 		zap.Int("num_tickers", len(provider.GetIDs())),
 	)

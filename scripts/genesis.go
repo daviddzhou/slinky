@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/skip-mev/slinky/cmd/constants/marketmaps"
-	"github.com/skip-mev/slinky/providers/apis/coinmarketcap"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
+	"github.com/skip-mev/connect/v2/cmd/constants/marketmaps"
+	"github.com/skip-mev/connect/v2/providers/apis/coinmarketcap"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types/tickermetadata"
 )
 
 var (
@@ -21,6 +21,9 @@ var (
 	useUniswapV3Base = flag.Bool("use-uniswapv3-base", false, "use uniswapv3 base markets")
 	useCoinGecko     = flag.Bool("use-coingecko", false, "use coingecko markets")
 	useCoinMarketCap = flag.Bool("use-coinmarketcap", false, "use coinmarketcap markets")
+	useOsmosis       = flag.Bool("use-osmosis", false, "use osmosis markets")
+	usePolymarket    = flag.Bool("use-polymarket", false, "use polymarket markets")
+	useForex         = flag.Bool("use-forex", false, "use forex markets")
 	tempFile         = flag.String("temp-file", "markets.json", "temporary file to store the market map")
 )
 
@@ -34,6 +37,8 @@ func main() {
 			fmt.Fprintf(flag.CommandLine.Output(), "market map config path (market-cfg-path) cannot be empty\n")
 			panic("market map config path (market-cfg-path) cannot be empty")
 		}
+
+		fmt.Printf("reading in market map file: %s\n", *marketFile)
 
 		marketMap, err := mmtypes.ReadMarketMapFromFile(*marketFile)
 		if err != nil {
@@ -85,6 +90,21 @@ func main() {
 	if *useCoinMarketCap {
 		fmt.Fprintf(flag.CommandLine.Output(), "Using coinmarketcap markets\n")
 		marketMap = mergeMarketMaps(marketMap, marketmaps.CoinMarketCapMarketMap)
+	}
+
+	if *useOsmosis {
+		fmt.Fprintf(flag.CommandLine.Output(), "Using osmosis markets\n")
+		marketMap = mergeMarketMaps(marketMap, marketmaps.OsmosisMarketMap)
+	}
+
+	if *usePolymarket {
+		fmt.Fprintf(flag.CommandLine.Output(), "Using polymarket markets\n")
+		marketMap = mergeMarketMaps(marketMap, marketmaps.PolymarketMarketMap)
+	}
+
+	if *useForex {
+		fmt.Fprintf(flag.CommandLine.Output(), "Using forex markets\n")
+		marketMap = mergeMarketMaps(marketMap, marketmaps.ForexMarketMap)
 	}
 
 	if err := marketMap.ValidateBasic(); err != nil {
